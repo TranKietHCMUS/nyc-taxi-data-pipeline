@@ -1,0 +1,14 @@
+nyc_taxi_data:
+  folder_path: /opt/airflow/data
+  data_type: yellow_tripdata
+  url_prefix: https://d37ci6vzurychx.cloudfront.net/trip-data/
+
+delta_table:
+  folder_path: /opt/airflow/delta-tables
+
+datalake:
+  endpoint: datalake-minio:9000
+  bucket_name: taxi-time-series
+  folder_name: yellow_tripdata
+  access_key: minio_access_key
+  secret_key: minio_secret_key

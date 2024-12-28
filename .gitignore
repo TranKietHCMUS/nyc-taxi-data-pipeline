@@ -1,0 +1,9 @@
+airflow/logs
+airflow/plugins
+airflow/config
+airflow/include
+airflow/dags/__pycache__
+airflow/dags/tasks/__pycache__
+data
+delta_tables
+.env

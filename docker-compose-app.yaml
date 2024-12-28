@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0.32
+    container_name: mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: k6
+      MYSQL_DATABASE: nyc-taxi
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ./init_db/mysql.sql:/docker-entrypoint-initdb.d/init.sql
+  
+  generator:
+    container_name: generator
+    image: kiettna/generator
+    build:
+      context: ./generator
+      dockerfile: Dockerfile
+    depends_on:
+      mysql:
+        condition: service_healthy

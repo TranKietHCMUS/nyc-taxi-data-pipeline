@@ -1,0 +1,22 @@
+{
+  "name": "mysql-source-connector",
+  "config": {
+      "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+      "database.hostname": "mysql",
+      "database.port": "3306",
+      "database.user": "root",
+      "database.password": "k6",
+      "database.server.name": "mysql",
+      "database.include.list": "nyc-taxi",
+      "table.include.list": "nyc-taxi.taxi_trip_records",
+      "database.server.id": "1",
+      "database.history.kafka.bootstrap.servers": "broker:29092",
+      "database.history.kafka.topic": "schema-changes.nyc-taxi.taxi_trip_records",
+      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "key.converter.schemas.enable": "true",
+      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "true",
+      "database.allowPublicKeyRetrieval": "true",
+      "decimal.handling.mode": "double"
+  }
+}

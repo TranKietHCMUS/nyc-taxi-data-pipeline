@@ -1,0 +1,7 @@
+apache-airflow-providers-docker==3.14.0
+minio==7.2.10
+deltalake==0.21.0
+pandas==2.0.3
+delta-spark==3.2.1
+pyspark==3.5.3
+pyarrow==17.0.0
