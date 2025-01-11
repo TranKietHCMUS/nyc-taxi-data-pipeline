@@ -12,7 +12,8 @@ data_cfg = cfg["nyc_taxi_data"]
 delta_cfg = cfg["delta_table"]
 datalake_cfg = cfg["datalake"]
 
-year = str(datetime.now().year)
+# year = str(datetime.now().year)
+year = "2024"
 
 def upload_local_directory_to_minio(minio_client, local_path, bucket_name, minio_path):
     assert os.path.isdir(local_path)

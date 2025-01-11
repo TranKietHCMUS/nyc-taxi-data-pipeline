@@ -10,7 +10,8 @@ data_cfg = cfg["nyc_taxi_data"]
 delta_cfg = cfg["delta_table"]
 datalake_cfg = cfg["datalake"]
 
-year = str(datetime.now().year)
+# year = str(datetime.now().year)
+year = "2024"
 
 def download_data(year, month):
     url_download = data_cfg["url_prefix"] + data_cfg["data_type"] + "_" + year + "-" + month + ".parquet"

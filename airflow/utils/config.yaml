@@ -4,7 +4,7 @@ nyc_taxi_data:
   url_prefix: https://d37ci6vzurychx.cloudfront.net/trip-data/
 
 delta_table:
-  folder_path: /opt/airflow/delta-tables
+  folder_path: /opt/airflow/delta_tables
 
 datalake:
   endpoint: datalake-minio:9000
