@@ -39,10 +39,10 @@ def task_failure_callback(context):
 
 default_args = {
     'owner': 'trkiet',
-    'retries': 3,
+    'retries': 5,
     'retry_delay': timedelta(minutes=3),
-    # 'on_success_callback': task_success_callback,
-    # 'on_failure_callback': task_failure_callback 
+    'on_success_callback': task_success_callback,
+    'on_failure_callback': task_failure_callback 
 }
 
 with DAG (
@@ -79,7 +79,7 @@ with DAG (
         api_version='auto',
         auto_remove=True,
         docker_url='tcp://docker-proxy:2375',  # Docker socket
-        network_mode='nyc-taxi-fare-prediction-pipeline_default',  # Or the network of your Airflow setup
+        network_mode='nyc-taxi-prediction-pipeline_default',  # Or the network of your Airflow setup
     )
 
     ingest2local_task >> convert2delta_task >> load2lake_task >> load2warehouse_task

@@ -2,7 +2,6 @@ import os
 import traceback
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
-import pandas as pd
 
 def read_delta_table(spark, delta_table_path):
     try:

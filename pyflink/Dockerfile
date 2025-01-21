@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y \
 # Đặt biến môi trường Java
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
 
-COPY /jars ./jars
+COPY /jars/flink-connector-kafka-1.17.1.jar ./jars/flink-connector-kafka-1.17.1.jar
+COPY /jars/kafka-clients-3.4.0.jar ./jars/kafka-clients-3.4.0.jar
 
 # COPY /scripts/flink_processing.py .
 
@@ -23,6 +24,3 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Đặt đường dẫn Flink
 ENV PATH="/opt/flink/bin:${PATH}"
-
-# Chạy ứng dụng
-# CMD ["python", "flink_processing.py"]

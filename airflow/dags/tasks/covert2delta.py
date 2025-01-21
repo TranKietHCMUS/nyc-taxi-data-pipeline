@@ -11,7 +11,8 @@ data_cfg = cfg["nyc_taxi_data"]
 delta_cfg = cfg["delta_table"]
 datalake_cfg = cfg["datalake"]
 
-year = str(datetime.now().year)
+# year = str(datetime.now().year)
+year = "2024"
 
 def convert_to_delta():
     for i in range(1, 13):
