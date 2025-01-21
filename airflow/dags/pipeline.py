@@ -79,7 +79,7 @@ with DAG (
         api_version='auto',
         auto_remove=True,
         docker_url='tcp://docker-proxy:2375',  # Docker socket
-        network_mode='nyc-taxi-fare-prediction-pipeline_default',  # Or the network of your Airflow setup
+        network_mode='nyc-taxi-prediction-pipeline_default',  # Or the network of your Airflow setup
     )
 
     ingest2local_task >> convert2delta_task >> load2lake_task >> load2warehouse_task
