@@ -85,7 +85,7 @@ x-airflow-common:
     # - ./airflow/plugins:/opt/airflow/plugins
     # - ./airflow/config:/opt/airflow/config
     # - ./airflow/include:/opt/airflow/include
-    - ./delta-tables:/opt/airflow/delta-tables
+    - ./delta_tables:/opt/airflow/delta_tables
     - ./data:/opt/airflow/data
   user: "${AIRFLOW_UID:-1000}:0"
   depends_on:
