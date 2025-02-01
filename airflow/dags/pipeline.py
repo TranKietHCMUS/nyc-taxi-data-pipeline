@@ -5,9 +5,11 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.utils.dates import days_ago
-from tasks.ingest2local import ingest_to_local
-from tasks.covert2delta import convert_to_delta
-from tasks.load2lake import load_to_data_lake
+from tasks.extract_api import extract_api
+from tasks.extract_db import extract_db
+from tasks.create_bucket import create_bucket
+from tasks.process_data import process_data
+from tasks.convert_to_delta import convert_to_delta
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
@@ -39,8 +41,8 @@ def task_failure_callback(context):
 
 default_args = {
     'owner': 'trkiet',
-    'retries': 5,
-    'retry_delay': timedelta(minutes=3),
+    'retries': 3,
+    'retry_delay': timedelta(minutes=5),
     'on_success_callback': task_success_callback,
     'on_failure_callback': task_failure_callback 
 }
@@ -51,35 +53,48 @@ with DAG (
     description = 'Build an ELT pipeline!',
     # start_date = datetime(2024, 11, 20),
     start_date=days_ago(0),
-    schedule_interval = '@daily',
+    schedule_interval = '@monthly',
     catchup=False,
 ) as dag:
-    ingest2local_task = PythonOperator(
-        task_id="ingest_to_local",
-        python_callable=ingest_to_local,
+    create_bucket_task = PythonOperator(
+        task_id="create_bucket",
+        python_callable=create_bucket,
         provide_context=True
     )
 
-    convert2delta_task = PythonOperator(
+    extract_api_task = PythonOperator(
+        task_id="extract_api",
+        python_callable=extract_api,
+        provide_context=True
+    )
+
+    extract_db_task = PythonOperator(
+        task_id="extract_db",
+        python_callable=extract_db,
+        provide_context=True
+    )
+
+    process_data_task = PythonOperator(
+        task_id="process_data",
+        python_callable=process_data,
+        provide_context=True
+    )
+
+    convert_to_delta_task = PythonOperator(
         task_id="convert_to_delta",
         python_callable=convert_to_delta,
         provide_context=True
     )
 
-    load2lake_task = PythonOperator(
-        task_id="load_to_data_lake",
-        python_callable=load_to_data_lake,
-        provide_context=True
-    )
+    # load2warehouse_task = DockerOperator(
+    #     task_id='load_to_data_warehouse',
+    #     image='kiettna/airflow-spark-job',  # Spark Docker image
+    #     container_name="airflow-spark-job",
+    #     command="python load_to_warehouse.py",
+    #     api_version='auto',
+    #     auto_remove=True,
+    #     docker_url='tcp://docker-proxy:2375',  # Docker socket
+    #     network_mode='nyc-taxi-prediction-pipeline_default',  # Or the network of your Airflow setup
+    # )
 
-    load2warehouse_task = DockerOperator(
-        task_id='load_to_data_warehouse',
-        image='kiettna/airflow-spark-job',  # Spark Docker image
-        container_name="airflow-spark-job",
-        api_version='auto',
-        auto_remove=True,
-        docker_url='tcp://docker-proxy:2375',  # Docker socket
-        network_mode='nyc-taxi-prediction-pipeline_default',  # Or the network of your Airflow setup
-    )
-
-    ingest2local_task >> convert2delta_task >> load2lake_task >> load2warehouse_task
+    create_bucket_task >> [extract_api_task, extract_db_task] >> process_data_task >> convert_to_delta_task
