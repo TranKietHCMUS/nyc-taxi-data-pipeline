@@ -6,7 +6,7 @@ CREATE TABLE taxi_trip_records (
     passenger_count INT CHECK (passenger_count >= 0),
     trip_distance DECIMAL(10, 2) CHECK (trip_distance >= 0),
     rate_code_id INT,
-    store_and_fwd_flag CHAR(1) CHECK (store_and_fwd_flag IN ('Y', 'N')),
+    store_and_fwd_flag BOOLEAN,
     pu_location_id INT,
     do_location_id INT,
     payment_type INT,
