@@ -12,57 +12,58 @@ from pyflink.datastream import RuntimeExecutionMode
 
 JARS_PATH = f"{os.getcwd()}/jars"
 
+required_fields = [
+    'id',
+    'vendor_id', 
+    'tpep_pickup_datetime', 
+    'tpep_dropoff_datetime', 
+    'passenger_count', 
+    'trip_distance',
+    'rate_code_id', 
+    'pu_location_id', 
+    'do_location_id', 
+    'payment_type', 
+    'fare_amount', 
+    'total_amount'
+]
+
 def merge_features(record):
     try:
         record_dict = json.loads(record)
         
-        # print("Full record structure:", json.dumps(record_dict, indent=2))
-        
         payload = record_dict.get('payload', {}).get('after', {})
-        
-        required_fields = [
-            'vendor_id', 
-            'tpep_pickup_datetime', 
-            'tpep_dropoff_datetime', 
-            'passenger_count', 
-            'trip_distance',
-            'ratecode_id', 
-            'store_and_fwd_flag', 
-            'pu_location_id', 
-            'do_location_id', 
-            'payment_type', 
-            'fare_amount', 
-            'total_amount' 
-        ]
-        
-        for field in required_fields:
-            if field not in payload:
-                print(f"Missing required field: {field}")
-                return None
 
-        # return json.dumps(payload)
-        return record
+        # only get fields that are required
+        payload = {k: v for k, v in payload.items() if k in required_fields}
+        return json.dumps(payload)
     
     except json.JSONDecodeError as e:
         print(f"JSON Decode Error: {e}")
-        # print("Problematic record:", record)
         return None
     except Exception as e:
         print(f"Unexpected error processing record: {e}")
-        # print("Problematic record:", record)
         return None
 
-
-def filter_small_features(record):
+def filter_features(record):
     """
-    Skip records containing a feature that is smaller than 0.5.
+    Filter out records with missing values
     """
     print("Raw record structure:", record)
     try:
         record_dict = json.loads(record)
         payload = record_dict.get('payload', {}).get('after', {})
-        
-        return payload.get('trip_distance', 0) > 0.5
+        print("Payload:", payload)
+        for field in required_fields:
+            if field not in payload:
+                print(f"Missing field: {field}")
+                return False
+            if field in ['passenger_count', 'trip_distance', 'payment_type', 'fare_amount', 'total_amount']:
+                if payload[field] < 0:
+                    print(f"Negative value for field {field}")
+                    return False
+        if payload['tpep_pickup_datetime'] > payload['tpep_dropoff_datetime']:
+            print("Invalid time range")
+            return False
     except Exception as e:
         print(f"Error parsing record: {e}")
     return True
@@ -104,21 +105,9 @@ def main():
         .build()
     )
 
-    # No sink, just print out to the terminal
-    # env.from_source(source, WatermarkStrategy.no_watermarks(), "Kafka Source").filter(
-    #     filter_small_features
-    # ).map(merge_features).print()
-
-    # env.from_source(source, WatermarkStrategy.no_watermarks(), "Kafka Source").map(merge_features).print()
-
-    # Add a sink to be more industrial, remember to cast to STRING in map
-    # it will not work if you don't do it
-    # env.from_source(source, WatermarkStrategy.no_watermarks(), "Kafka Source").filter(
-    #     filter_small_features
-    # ).map(merge_features, output_type=Types.STRING()).sink_to(sink=sink)
-
-    env.from_source(source, WatermarkStrategy.no_watermarks(), "Kafka Source")\
-        .map(merge_features, output_type=Types.STRING()).sink_to(sink=sink)
+    env.from_source(source, WatermarkStrategy.no_watermarks(), "Kafka Source").filter(
+        filter_features
+    ).map(merge_features, output_type=Types.STRING()).sink_to(sink=sink)
 
     # Execute the job
     env.execute("flink_datastream_demo")
