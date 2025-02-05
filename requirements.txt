@@ -1,5 +1,8 @@
 apache-airflow==2.8.0
 apache-airflow-providers-docker==3.7.5
+minio==7.2.10
+deltalake==0.21.0
+pandas==2.0.3
 
 Flask
 Flask-SQLAlchemy
