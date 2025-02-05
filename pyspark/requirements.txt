@@ -1,5 +1,5 @@
 psycopg2-binary
-pandas
+# pandas
 delta-spark==2.1.0
 pyspark
-pyarrow
+# pyarrow

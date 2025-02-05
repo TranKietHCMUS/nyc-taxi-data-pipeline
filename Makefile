@@ -14,6 +14,34 @@ down_all:
 	docker-compose -f docker-compose-app.yaml down -v
 
 
+.PHONY: run_batch
+run_batch:
+	docker-compose -f docker-compose-airflow.yaml up -d
+	docker-compose -f docker-compose-storage.yaml up -d
+	docker-compose -f docker-compose-app.yaml up -d
+
+
+.PHONY: down_batch
+down_batch:
+	docker-compose -f docker-compose-airflow.yaml down -v
+	docker-compose -f docker-compose-storage.yaml down -v
+	docker-compose -f docker-compose-app.yaml down -v
+
+
+.PHONY: run_streaming
+run_streaming:
+	docker-compose -f docker-compose-kafka.yaml up -d
+	docker-compose -f docker-compose-storage.yaml up -d
+	docker-compose -f docker-compose-app.yaml up -d
+
+
+.PHONY: down_streaming
+down_streaming:
+	docker-compose -f docker-compose-kafka.yaml down -v
+	docker-compose -f docker-compose-storage.yaml down -v
+	docker-compose -f docker-compose-app.yaml down -v
+
+
 .PHONY: run_storage
 run_storage:
 	docker-compose -f docker-compose-storage.yaml up -d

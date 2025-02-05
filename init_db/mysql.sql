@@ -1,12 +1,12 @@
 CREATE TABLE taxi_trip_records (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vendor_id INT,
-    tpep_pickup_datetime VARCHAR(50) NOT NULL,
-    tpep_dropoff_datetime VARCHAR(50) NOT NULL,
+    tpep_pickup_datetime DATETIME,
+    tpep_dropoff_datetime DATETIME,
     passenger_count INT CHECK (passenger_count >= 0),
     trip_distance DECIMAL(10, 2) CHECK (trip_distance >= 0),
-    ratecode_id INT,
-    store_and_fwd_flag CHAR(1) CHECK (store_and_fwd_flag IN ('Y', 'N')),
+    rate_code_id INT,
+    store_and_fwd_flag BOOLEAN,
     pu_location_id INT,
     do_location_id INT,
     payment_type INT,
@@ -18,5 +18,7 @@ CREATE TABLE taxi_trip_records (
     improvement_surcharge DECIMAL(10, 2) DEFAULT 0.0,
     total_amount DECIMAL(10, 2) CHECK (total_amount >= 0),
     congestion_surcharge DECIMAL(10, 2) DEFAULT 0.0,
-    airport_fee DECIMAL(10, 2) DEFAULT 0.0
+    airport_fee DECIMAL(10, 2) DEFAULT 0.0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

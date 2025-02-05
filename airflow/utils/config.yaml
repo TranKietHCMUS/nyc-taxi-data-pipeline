@@ -1,14 +1,21 @@
 nyc_taxi_data:
-  folder_path: /opt/airflow/data
   data_type: yellow_tripdata
   url_prefix: https://d37ci6vzurychx.cloudfront.net/trip-data/
 
-delta_table:
-  folder_path: /opt/airflow/delta_tables
+mysql:
+  host: mysql
+  port: 3306
+  user: root
+  password: k6
+  database: nyc-taxi
+  table: taxi_trip_records
 
 datalake:
   endpoint: datalake-minio:9000
-  bucket_name: taxi-time-series
-  folder_name: yellow_tripdata
+  bucket_name1: bronze
+  bucket_name2: silver
+  bucket_name3: golden
+  api_folder_name: api
+  db_folder_name: db
   access_key: minio_access_key
   secret_key: minio_secret_key

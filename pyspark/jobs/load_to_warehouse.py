@@ -1,12 +1,14 @@
+from datetime import datetime
 import os
 import traceback
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 
-def read_delta_table(spark, delta_table_path):
+def read_parquet_file(spark, file_path):
     try:
-        delta_df = spark.read.format("delta").load(delta_table_path)
-        return delta_df
+        # read file parquet
+        df = spark.read.parquet(file_path)
+        return df
     except Exception as e:
         print(f"Error reading Delta table: {e}")
         traceback.print_exc()
@@ -16,8 +18,8 @@ def main():
     s3_endpoint = os.getenv("S3_ENDPOINT")
     s3_access_key = os.getenv("S3_ACCESS_KEY")
     s3_secret_key = os.getenv("S3_SECRET_KEY")
-    s3_bucket = os.getenv("S3_BUCKET")
-    folder_name = os.getenv("FOLDER_NAME")
+    s3_bucket = os.getenv("S3_SILVER_BUCKET")
+    file_name = os.getenv("FILE_NAME")
 
     postgres_url = os.getenv("POSTGRES_URL")
     postgres_user = os.getenv("POSTGRES_USER")
@@ -28,7 +30,7 @@ def main():
         SparkSession.builder
         .appName("DeltaTableToPostgres")
         .config("spark.jars.packages", 
-            "io.delta:delta-core_2.12:2.1.0,"
+            # "io.delta:delta-core_2.12:2.1.0,"
             "org.apache.hadoop:hadoop-aws:3.3.4,"
             "com.amazonaws:aws-java-sdk-bundle:1.12.261,"
             "org.postgresql:postgresql:42.5.0"
@@ -38,8 +40,8 @@ def main():
             "/opt/spark/jars/aws-java-sdk-bundle-1.12.261.jar,"
             "/opt/spark/jars/postgresql-42.5.0.jar"
         )
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        # .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+        # .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
         # Cấu hình S3A
         .config("spark.hadoop.fs.s3a.endpoint", s3_endpoint)
         .config("spark.hadoop.fs.s3a.access.key", s3_access_key)
@@ -52,60 +54,48 @@ def main():
         .config("spark.hadoop.fs.s3a.fast.upload", "true")
         .config("spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version", "2")
         .config("spark.hadoop.fs.defaultFS", f"s3a://{s3_bucket}")
+        .config("spark.sql.parquet.int96RebaseModeInRead", "LEGACY")
+        .config("spark.sql.parquet.outputTimestampType", "TIMESTAMP_MICROS")
         .getOrCreate()
     )
 
-    # delta_df = None
+    year = str(datetime.now().year)
+    month = str(datetime.now().month).zfill(2)
 
-    # for i in range(1, 10):
-    #     month = str(i).zfill(2)
-    #     delta_table_path = f"s3a://{s3_bucket}/{folder_name}/2024/{month}"
-    #     print(delta_table_path)
-    #     df = read_delta_table(spark, delta_table_path)
-    #     if df:
-    #         if delta_df is None:
-    #             delta_df = df
-    #         else:
-    #             delta_df = delta_df.union(df)
+    file_path = f"s3a://{s3_bucket}/{year}/{file_name}-{month}.parquet"
 
-    delta_table_path = f"s3a://{s3_bucket}/{folder_name}/2024/01"
+    df = read_parquet_file(spark, file_path)
 
-    delta_df = read_delta_table(spark, delta_table_path)
+    # drop column __index_level_0 if exists
+    if "__index_level_0__" in df.columns:
+        df = df.drop(col("__index_level_0__"))
 
-    delta_df = delta_df.select(
-        col("VendorID").alias("vendor_id"),
-        col("tpep_pickup_datetime"),
-        col("tpep_dropoff_datetime"),
-        col("passenger_count"),
-        col("trip_distance"),
-        col("RatecodeID").alias("ratecode_id"),
-        col("store_and_fwd_flag"),
-        col("PULocationID").alias("pu_location_id"),
-        col("DOLocationID").alias("do_location_id"),
-        col("payment_type"),
-        col("fare_amount"),
-        col("extra"),
-        col("mta_tax"),
-        col("tip_amount"),
-        col("tolls_amount"),
-        col("improvement_surcharge"),
-        col("total_amount"),
-        col("congestion_surcharge"),
-        col("airport_fee")
-    )
+    # print df count
+    print(df.count())
+    # show the data
+    df.printSchema()
 
-    cleaned_delta_df = delta_df.dropna()
-
-    # cleaned_delta_df['store_and_fwd_flag'] = cleaned_delta_df['store_and_fwd_flag'].map({'Y': 1, 'N': 0})
-
-    cleaned_delta_df.write \
+    # count number of rows from postgres table
+    old_count = spark.read \
         .format("jdbc") \
         .option("url", postgres_url) \
         .option("dbtable", postgres_table) \
         .option("user", postgres_user) \
         .option("password", postgres_password) \
         .option("driver", "org.postgresql.Driver") \
-        .mode("overwrite") \
+        .load().count()
+
+    # update id column with auto-incremental value from old_count + 1 to new_count + old_count + 1
+    df = df.withColumn("id", col("id") + old_count)
+
+    df.write \
+        .format("jdbc") \
+        .option("url", postgres_url) \
+        .option("dbtable", postgres_table) \
+        .option("user", postgres_user) \
+        .option("password", postgres_password) \
+        .option("driver", "org.postgresql.Driver") \
+        .mode("append") \
         .save()
 
     print("Data successfully loaded to PostgreSQL.")

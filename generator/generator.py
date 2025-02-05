@@ -6,7 +6,7 @@ import time
 # Kết nối đến MySQL database
 mydb = mysql.connector.connect(
   host="mysql",
-  port="3306",
+  port="3307",
   user="root",
   password="k6",
   database="nyc-taxi"
@@ -22,7 +22,7 @@ def generate_random_data():
   passenger_count = random.randint(1, 4)
   trip_distance = round(random.uniform(0.5, 10.0), 2)
   rate_code_id = random.randint(1, 6)  # Giả sử có 6 RatecodeID
-  store_and_fwd_flag = random.choice(['Y', 'N'])
+  store_and_fwd_flag = random.randint(0, 1)
   pu_location_id = random.randint(1, 263)  # Giả sử có 263 PULocationID
   do_location_id = random.randint(1, 263)  # Giả sử có 263 DOLocationID
   payment_type = random.randint(1, 6)  # Giả sử có 6 payment_type
@@ -43,7 +43,7 @@ def generate_random_data():
 # Tạo và chèn dữ liệu vào bảng
 def insert_data(data):
   sql = """INSERT INTO taxi_trip_records (vendor_id, tpep_pickup_datetime, tpep_dropoff_datetime, passenger_count, 
-  trip_distance, ratecode_id, store_and_fwd_flag, pu_location_id, do_location_id, payment_type, fare_amount, extra, 
+  trip_distance, rate_code_id, store_and_fwd_flag, pu_location_id, do_location_id, payment_type, fare_amount, extra, 
   mta_tax, tip_amount, tolls_amount, improvement_surcharge, total_amount, congestion_surcharge, airport_fee) 
   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
   cursor.execute(sql, data)
