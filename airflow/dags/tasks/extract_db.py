@@ -28,6 +28,10 @@ def get_data_from_db(minio_client, year, month, bucket_name, object_name):
         """
         
         df = pd.read_sql(query, engine)
+
+        if df.empty:
+            print(f"No data available for {month}/{year}")
+            return
         
         parquet_buffer = io.BytesIO()
         df.to_parquet(parquet_buffer)

@@ -27,25 +27,29 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
         
         if api_df is None:
             print("Only database data available")
-            db_df = db_df.drop(columns=["id", "created_at", "updated_at"])
+            db_df = db_df.drop(columns=["id"])
             merged_df = db_df
         elif db_df is None:
             print("Only API data available")
             api_df = api_df.rename(columns={
-                "VendorId": "vendor_id",
+                "VendorID": "vendor_id",
                 "RatecodeID": "rate_code_id",
                 "PULocationID": "pu_location_id",
                 "DOLocationID": "do_location_id",
                 "Airport_fee": "airport_fee",
-                })
+            })
             api_df["vendor_id"] = api_df["vendor_id"].astype('int64')
             api_df["pu_location_id"] = api_df["pu_location_id"].astype('int64')
             api_df["do_location_id"] = api_df["do_location_id"].astype('int64')
+            api_df["store_and_fwd_flag"] = api_df["store_and_fwd_flag"].map({'Y': 1, 'N': 0})
+            api_df["store_and_fwd_flag"] = api_df["store_and_fwd_flag"].astype('boolean')
+            api_df["created_at"] = datetime.now()
+            api_df["updated_at"] = datetime.now()
             merged_df = api_df
         else:
             print("Merging data from both sources")
             # Drop columns from db data before merging
-            db_df = db_df.drop(columns=["id", "created_at", "updated_at"])
+            db_df = db_df.drop(columns=["id"])
 
             api_df = api_df.rename(columns={
                 "VendorID": "vendor_id",
@@ -58,12 +62,28 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
             api_df["vendor_id"] = api_df["vendor_id"].astype('int64')
             api_df["pu_location_id"] = api_df["pu_location_id"].astype('int64')
             api_df["do_location_id"] = api_df["do_location_id"].astype('int64')
+            api_df["store_and_fwd_flag"] = api_df["store_and_fwd_flag"].map({'Y': 1, 'N': 0})
+            api_df["created_at"] = datetime.now()
+            api_df["updated_at"] = datetime.now()
 
             # Merge dataframes
             merged_df = pd.concat([api_df, db_df], ignore_index=True).drop_duplicates()
         
         # remove rows with missing values
         merged_df = merged_df.dropna()
+
+        # add new columns "id" with an auto-incremental value
+        merged_df["id"] = range(1, len(merged_df) + 1)
+
+        merged_df["created_at"] = merged_df["created_at"].astype('datetime64[us]')
+        merged_df["updated_at"] = merged_df["updated_at"].astype('datetime64[us]')
+
+        # drop rows with trip_distance < 0 or fare_amount < 0 or total_amount < 0
+        merged_df = merged_df[merged_df["trip_distance"] >= 0]
+        merged_df = merged_df[merged_df["fare_amount"] >= 0]
+        merged_df = merged_df[merged_df["total_amount"] >= 0]
+
+        print(merged_df.dtypes)
         
         # Convert DataFrame to parquet
         parquet_buffer = BytesIO()
@@ -85,7 +105,7 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
         print(f"Error during data merge: {str(e)}")
         raise e
 
-def process_data():
+def process_raw_to_silver():
     # Initialize MinIO client
     minio_client = Minio(
         endpoint=datalake_cfg["endpoint"],

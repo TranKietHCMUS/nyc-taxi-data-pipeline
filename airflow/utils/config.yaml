@@ -12,9 +12,9 @@ mysql:
 
 datalake:
   endpoint: datalake-minio:9000
-  bucket_name1: raw
-  bucket_name2: processed
-  bucket_name3: sandbox
+  bucket_name1: bronze
+  bucket_name2: silver
+  bucket_name3: golden
   api_folder_name: api
   db_folder_name: db
   access_key: minio_access_key

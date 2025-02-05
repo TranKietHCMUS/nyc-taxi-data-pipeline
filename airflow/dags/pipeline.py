@@ -1,6 +1,6 @@
 import os
 import requests
-from datetime import timedelta
+from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.docker.operators.docker import DockerOperator
@@ -8,8 +8,7 @@ from airflow.utils.dates import days_ago
 from tasks.extract_api import extract_api
 from tasks.extract_db import extract_db
 from tasks.create_bucket import create_bucket
-from tasks.process_data import process_data
-from tasks.convert_to_delta import convert_to_delta
+from tasks.process_raw_to_silver import process_raw_to_silver
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
@@ -17,7 +16,12 @@ CHAT_ID = os.getenv('CHAT_ID')
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
 
 def send_message(task_id, status):
-    message = f"Task {task_id} has {status}."
+    year = str(datetime.now().year)
+    month = str(datetime.now().month).zfill(2)
+    day = str(datetime.now().day).zfill(2)
+    hour = str(datetime.now().hour).zfill(2)
+    minute = str(datetime.now().minute).zfill(2)
+    message = f"Task {task_id} {status} at {hour}:{minute} on {month}/{day}/{year}."
     payload = {
         'chat_id': CHAT_ID,
         'text': message
@@ -74,27 +78,32 @@ with DAG (
         provide_context=True
     )
 
-    process_data_task = PythonOperator(
-        task_id="process_data",
-        python_callable=process_data,
+    process_raw_to_silver_task = PythonOperator(
+        task_id="process_raw_to_silver",
+        python_callable=process_raw_to_silver,
         provide_context=True
     )
 
-    convert_to_delta_task = PythonOperator(
-        task_id="convert_to_delta",
-        python_callable=convert_to_delta,
-        provide_context=True
+    process_silver_to_golden_task = DockerOperator(
+        task_id='process_silver_to_golden',
+        image='kiettna/airflow-spark-job',  # Spark Docker image
+        container_name="process_silver_to_golden",
+        command="python process_silver_to_golden.py",
+        api_version='auto',
+        auto_remove=True,
+        docker_url='tcp://docker-proxy:2375',  # Docker socket
+        network_mode='nyc-taxi-prediction-pipeline_default',  # Or the network of your Airflow setup
     )
 
-    # load2warehouse_task = DockerOperator(
-    #     task_id='load_to_data_warehouse',
-    #     image='kiettna/airflow-spark-job',  # Spark Docker image
-    #     container_name="airflow-spark-job",
-    #     command="python load_to_warehouse.py",
-    #     api_version='auto',
-    #     auto_remove=True,
-    #     docker_url='tcp://docker-proxy:2375',  # Docker socket
-    #     network_mode='nyc-taxi-prediction-pipeline_default',  # Or the network of your Airflow setup
-    # )
+    load_to_warehouse_task = DockerOperator(
+        task_id='load_to_data_warehouse',
+        image='kiettna/airflow-spark-job',  # Spark Docker image
+        container_name="load_to_data_warehouse",
+        command="python load_to_warehouse.py",
+        api_version='auto',
+        auto_remove=True,
+        docker_url='tcp://docker-proxy:2375',  # Docker socket
+        network_mode='nyc-taxi-prediction-pipeline_default',  # Or the network of your Airflow setup
+    )
 
-    create_bucket_task >> [extract_api_task, extract_db_task] >> process_data_task >> convert_to_delta_task
+    create_bucket_task >> [extract_api_task, extract_db_task] >> process_raw_to_silver_task >> [process_silver_to_golden_task, load_to_warehouse_task]
