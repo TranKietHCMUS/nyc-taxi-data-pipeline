@@ -1,5 +1,4 @@
-# Use slim base image for smaller size
-FROM python:3.8-slim-buster
+FROM python:3.10-slim-buster
 
 # Combine RUN commands and clean up in the same layer to reduce image size
 RUN apt-get update && apt-get install -y \
@@ -15,8 +14,9 @@ ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 \
     S3_ENDPOINT="http://datalake-minio:9000" \
     S3_ACCESS_KEY="minio_access_key" \
     S3_SECRET_KEY="minio_secret_key" \
-    S3_BUCKET="taxi-time-series" \
-    FOLDER_NAME="yellow_tripdata" \
+    S3_SILVER_BUCKET="silver" \
+    S3_GOLDEN_BUCKET="golden" \
+    FILE_NAME="yellow_tripdata" \
     POSTGRES_URL="jdbc:postgresql://data-warehouse:5432/nyc-taxi" \
     POSTGRES_USER="k6" \
     POSTGRES_PASSWORD="k6" \
@@ -39,6 +39,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Set working directory and copy application code
 WORKDIR /app
-COPY /jobs/minio2postgres.py .
-
-CMD ["python", "minio2postgres.py"]
+COPY /jobs .
