@@ -31,6 +31,8 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
             merged_df = db_df
         elif db_df is None:
             print("Only API data available")
+            api_df = api_df.drop(columns=["store_and_fwd_flag"])
+
             api_df = api_df.rename(columns={
                 "VendorID": "vendor_id",
                 "RatecodeID": "rate_code_id",
@@ -38,18 +40,20 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
                 "DOLocationID": "do_location_id",
                 "Airport_fee": "airport_fee",
             })
+
             api_df["vendor_id"] = api_df["vendor_id"].astype('int64')
             api_df["pu_location_id"] = api_df["pu_location_id"].astype('int64')
             api_df["do_location_id"] = api_df["do_location_id"].astype('int64')
-            api_df["store_and_fwd_flag"] = api_df["store_and_fwd_flag"].map({'Y': 1, 'N': 0})
-            api_df["store_and_fwd_flag"] = api_df["store_and_fwd_flag"].astype('boolean')
             api_df["created_at"] = datetime.now()
             api_df["updated_at"] = datetime.now()
+
             merged_df = api_df
         else:
             print("Merging data from both sources")
             # Drop columns from db data before merging
             db_df = db_df.drop(columns=["id"])
+
+            api_df = api_df.drop(columns=["store_and_fwd_flag"])
 
             api_df = api_df.rename(columns={
                 "VendorID": "vendor_id",
