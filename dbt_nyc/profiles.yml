@@ -1,0 +1,12 @@
+dbt_nyc:
+  outputs:
+    dev:
+      dbname: nyc-taxi
+      host: localhost
+      pass: 'k6'
+      port: 5433
+      schema: public
+      threads: 1
+      type: postgres
+      user: k6
+  target: dev
