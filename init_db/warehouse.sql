@@ -6,7 +6,6 @@ CREATE TABLE taxi_trip_records (
     passenger_count INT CHECK (passenger_count >= 0), -- Số lượng hành khách (>= 0)
     trip_distance DECIMAL(10, 2) CHECK (trip_distance >= 0), -- Khoảng cách chuyến đi
     rate_code_id INT, -- Mã loại giá cước
-    store_and_fwd_flag BOOLEAN, -- Cờ lưu trữ (Y/N)
     pu_location_id INT, -- ID địa điểm đón khách
     do_location_id INT, -- ID địa điểm trả khách
     payment_type INT, -- Phương thức thanh toán
