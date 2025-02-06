@@ -1,0 +1,59 @@
+version: 2
+
+sources:
+  - name: raw
+    database: nyc-taxi
+    schema: public  # Thay thế bằng schema phù hợp
+    tables:
+      - name: taxi_trip_records
+
+models:
+  - name: trip_duration
+    columns:
+      - name: id
+        tests:
+          - unique
+          - not_null
+      - name: vendor_id
+        tests:
+          - not_null
+      - name: duration_seconds
+        tests:
+          - not_null
+      - name: trip_distance
+        tests:
+          - not_null
+      - name: pu_location_id
+        tests:
+          - not_null
+      - name: do_location_id
+        tests:
+          - not_null
+
+  - name: vendor_revenue
+    columns:
+      - name: vendor_id
+        tests:
+          - unique
+          - not_null
+      - name: total_trips
+        tests:
+          - not_null
+      - name: total_revenue
+        tests:
+          - not_null
+      - name: avg_trip_revenue
+        tests:
+          - not_null
+      - name: total_fare_amount
+        tests:
+          - not_null
+      - name: total_tips
+        tests:
+          - not_null
+      - name: total_tolls
+        tests:
+          - not_null
+      - name: total_airport_fees
+        tests:
+          - not_null

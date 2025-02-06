@@ -7,3 +7,4 @@ airflow/dags/tasks/__pycache__
 data
 delta_tables
 .env
+logs
