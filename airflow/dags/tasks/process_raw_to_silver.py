@@ -32,6 +32,8 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
         elif db_df is None:
             print("Only API data available")
             api_df = api_df.drop(columns=["store_and_fwd_flag"])
+            api_df["tpep_pickup_datetime"] = api_df["tpep_pickup_datetime"].astype('datetime64[s]')
+            api_df["tpep_dropoff_datetime"] = api_df["tpep_dropoff_datetime"].astype('datetime64[s]')
 
             api_df = api_df.rename(columns={
                 "VendorID": "vendor_id",
@@ -54,6 +56,8 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
             db_df = db_df.drop(columns=["id"])
 
             api_df = api_df.drop(columns=["store_and_fwd_flag"])
+            api_df["tpep_pickup_datetime"] = api_df["tpep_pickup_datetime"].astype('datetime64[s]')
+            api_df["tpep_dropoff_datetime"] = api_df["tpep_dropoff_datetime"].astype('datetime64[s]')
 
             api_df = api_df.rename(columns={
                 "VendorID": "vendor_id",
@@ -66,7 +70,6 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
             api_df["vendor_id"] = api_df["vendor_id"].astype('int64')
             api_df["pu_location_id"] = api_df["pu_location_id"].astype('int64')
             api_df["do_location_id"] = api_df["do_location_id"].astype('int64')
-            api_df["store_and_fwd_flag"] = api_df["store_and_fwd_flag"].map({'Y': 1, 'N': 0})
             api_df["created_at"] = datetime.now()
             api_df["updated_at"] = datetime.now()
 
@@ -79,8 +82,8 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
         # add new columns "id" with an auto-incremental value
         merged_df["id"] = range(1, len(merged_df) + 1)
 
-        merged_df["created_at"] = merged_df["created_at"].astype('datetime64[us]')
-        merged_df["updated_at"] = merged_df["updated_at"].astype('datetime64[us]')
+        merged_df["created_at"] = merged_df["created_at"].astype('datetime64[s]')
+        merged_df["updated_at"] = merged_df["updated_at"].astype('datetime64[s]')
 
         # drop rows with trip_distance < 0 or fare_amount < 0 or total_amount < 0
         merged_df = merged_df[merged_df["trip_distance"] >= 0]
