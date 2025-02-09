@@ -13,3 +13,6 @@ mysql-connector-python==8.0.28
 
 dbt-core==1.9.2
 dbt-postgres==1.9.0
+
+numpy==1.26.4
+scikit-learn==1.6.1
