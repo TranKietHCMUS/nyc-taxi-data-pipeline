@@ -98,7 +98,7 @@ def main():
         .set_bootstrap_servers("broker:29092")
         .set_record_serializer(
             KafkaRecordSerializationSchema.builder()
-            .set_topic("postgres.taxi_trip_records")
+            .set_topic("sink.taxi_trip_records")
             .set_value_serialization_schema(SimpleStringSchema())
             .build()
         )
