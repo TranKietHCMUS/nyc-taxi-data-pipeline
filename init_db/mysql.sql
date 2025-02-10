@@ -21,16 +21,3 @@ CREATE TABLE taxi_trip_records (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-CREATE TABLE predicts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    vendor_id INT,
-    tpep_pickup_datetime DATETIME,
-    tpep_dropoff_datetime DATETIME,
-    passenger_count INT CHECK (passenger_count >= 0),
-    trip_distance DECIMAL(10, 2) CHECK (trip_distance >= 0),
-    pu_location_id INT,
-    do_location_id INT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)
