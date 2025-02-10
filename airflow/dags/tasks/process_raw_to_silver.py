@@ -75,9 +75,6 @@ def merge_and_clean_monthly_data(minio_client, source_bucket, des_bucket, year, 
 
             # Merge dataframes
             merged_df = pd.concat([api_df, db_df], ignore_index=True).drop_duplicates()
-        
-        # remove rows with missing values
-        merged_df = merged_df.dropna()
 
         # add new columns "id" with an auto-incremental value
         merged_df["id"] = range(1, len(merged_df) + 1)
