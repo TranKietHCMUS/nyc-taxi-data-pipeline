@@ -1,4 +1,5 @@
 import datetime
+import joblib
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
@@ -12,50 +13,51 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# NYC Taxi Model
+# Load the ML model using joblib
+try:
+    with open('model/nyc-taxi-prediction-model.joblib', 'rb') as file:
+        model = joblib.load(file)
+except Exception as e:
+    print(f"Error loading model: {e}")
+    model = None
+
+
 class TaxiTripRecord(db.Model):
     __tablename__ = 'taxi_trip_records'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    VendorID = db.Column(db.Integer, nullable=False)
+    tpep_pickup_datetime = db.Column(db.DateTime, nullable=False)
+    tpep_dropoff_datetime = db.Column(db.DateTime, nullable=False)
 
-    # Khóa chính ghép
-    VendorID = db.Column(db.Integer, primary_key=True)
-    tpep_pickup_datetime = db.Column(db.DateTime, primary_key=True, nullable=False)
-    tpep_dropoff_datetime = db.Column(db.DateTime, primary_key=True, nullable=False)
-
-    # Các cột khác
     passenger_count = db.Column(db.Integer, 
         CheckConstraint('passenger_count >= 0'), 
-        nullable=True
+        nullable=False
     )
     trip_distance = db.Column(db.Float, 
         CheckConstraint('trip_distance >= 0'), 
-        nullable=True
+        nullable=False
     )
-    RatecodeID = db.Column(db.Integer, nullable=True)
-    store_and_fwd_flag = db.Column(db.boolean, 
-        CheckConstraint("store_and_fwd_flag IN ('Y', 'N')"),
-        nullable=True
-    )
-    PULocationID = db.Column(db.Integer, nullable=True)
-    DOLocationID = db.Column(db.Integer, nullable=True)
-    payment_type = db.Column(db.Integer, nullable=True)
+    RatecodeID = db.Column(db.Integer, nullable=False)
+    PULocationID = db.Column(db.Integer, nullable=False)
+    DOLocationID = db.Column(db.Integer, nullable=False)
+    payment_type = db.Column(db.Integer, nullable=False)
     fare_amount = db.Column(db.Float, 
         CheckConstraint('fare_amount >= 0'), 
-        nullable=True
+        nullable=False
     )
-    extra = db.Column(db.Float, default=0.0, nullable=True)
-    mta_tax = db.Column(db.Float, default=0.0, nullable=True)
-    tip_amount = db.Column(db.Float, default=0.0, nullable=True)
-    tolls_amount = db.Column(db.Float, default=0.0, nullable=True)
-    improvement_surcharge = db.Column(db.Float, default=0.0, nullable=True)
+    extra = db.Column(db.Float, default=0.0, nullable=False)
+    mta_tax = db.Column(db.Float, default=0.0, nullable=False)
+    tip_amount = db.Column(db.Float, default=0.0, nullable=False)
+    tolls_amount = db.Column(db.Float, default=0.0, nullable=False)
+    improvement_surcharge = db.Column(db.Float, default=0.0, nullable=False)
     total_amount = db.Column(db.Float, 
         CheckConstraint('total_amount >= 0'), 
-        nullable=True
+        nullable=False
     )
-    congestion_surcharge = db.Column(db.Float, default=0.0, nullable=True)
-    airport_fee = db.Column(db.Float, default=0.0, nullable=True)
+    congestion_surcharge = db.Column(db.Float, default=0.0, nullable=False)
+    airport_fee = db.Column(db.Float, default=0.0, nullable=False)
 
     def to_dict(self):
-        """Chuyển đổi model thành dictionary"""
         return {
             'VendorID': self.VendorID,
             'tpep_pickup_datetime': self.tpep_pickup_datetime.isoformat() if self.tpep_pickup_datetime else None,
@@ -63,7 +65,6 @@ class TaxiTripRecord(db.Model):
             'passenger_count': self.passenger_count,
             'trip_distance': self.trip_distance,
             'RatecodeID': self.RatecodeID,
-            'store_and_fwd_flag': self.store_and_fwd_flag,
             'PULocationID': self.PULocationID,
             'DOLocationID': self.DOLocationID,
             'payment_type': self.payment_type,
@@ -80,7 +81,6 @@ class TaxiTripRecord(db.Model):
 
     @classmethod
     def create_from_dict(cls, data):
-        """Tạo instance từ dictionary"""
         return cls(
             VendorID=data.get('VendorID'),
             tpep_pickup_datetime=datetime.datetime.fromisoformat(data.get('tpep_pickup_datetime')) if data.get('tpep_pickup_datetime') else None,
@@ -88,7 +88,6 @@ class TaxiTripRecord(db.Model):
             passenger_count=data.get('passenger_count'),
             trip_distance=data.get('trip_distance'),
             RatecodeID=data.get('RatecodeID'),
-            store_and_fwd_flag=data.get('store_and_fwd_flag'),
             PULocationID=data.get('PULocationID'),
             DOLocationID=data.get('DOLocationID'),
             payment_type=data.get('payment_type'),
@@ -104,17 +103,14 @@ class TaxiTripRecord(db.Model):
         )
 
 
-@app.route("/api/predict", methods=["POST"])
-def predict():
-    # Kiểm tra dữ liệu đầu vào
+@app.route("/api/data", methods=["POST"])
+def data():
     if not request.json:
         return jsonify({"message": "No input data"}), 400
 
     try:
-        # Tạo bản ghi từ dữ liệu JSON
         record = TaxiTripRecord.create_from_dict(request.json)
         
-        # Thêm và commit bản ghi
         db.session.add(record)
         db.session.commit()
         
@@ -124,16 +120,14 @@ def predict():
         }), 201
 
     except ValueError as ve:
-        # Bắt lỗi từ việc chuyển đổi dữ liệu
         return jsonify({"message": f"Invalid data: {str(ve)}"}), 400
     except IntegrityError as ie:
-        # Rollback session nếu có lỗi toàn vẹn dữ liệu
         db.session.rollback()
         return jsonify({"message": f"Database integrity error: {str(ie)}"}), 400
     except Exception as e:
-        # Xử lý các lỗi không mong đợi
         db.session.rollback()
         return jsonify({"message": f"Unexpected error: {str(e)}"}), 500
+    
 
 if __name__ == '__main__':
     app.run(debug=True, host='localhost', port=5000)

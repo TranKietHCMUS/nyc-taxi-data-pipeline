@@ -2,3 +2,5 @@ Flask==2.2.5
 Flask-SQLAlchemy==2.5.1
 PyMySQL==1.1.1
 SQLAlchemy==1.4.54
+numpy==1.26.4
+scikit-learn==1.6.1
