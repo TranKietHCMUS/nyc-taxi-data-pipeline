@@ -79,10 +79,12 @@ def main():
         print("Successfully read new data at " + source_path + " with count: " + str(new_df.count()))
 
         # select columns
-        new_df.drop("vendor_id", "tpep_pickup_datetime", "tpep_dropoff_datetime", "pu_location_id", "do_location_id", "passenger_count", "trip_distance")
+        new_df.drop("vendor_id", "tpep_pickup_datetime", "tpep_dropoff_datetime", "pu_location_id", "do_location_id", "trip_distance")
 
         new_df = new_df.withColumn("tpep_pickup_datetime", new_df["tpep_pickup_datetime"].cast("long"))
         new_df = new_df.withColumn("tpep_dropoff_datetime", new_df["tpep_dropoff_datetime"].cast("long"))
+
+        new_df = new_df.dropna()
 
         try:
             # Try to read existing Delta table
