@@ -6,7 +6,7 @@ import time
 # Kết nối đến MySQL database
 mydb = mysql.connector.connect(
   host="mysql",
-  port="3307",
+  port="3306",
   user="root",
   password="k6",
   database="nyc-taxi"
@@ -17,8 +17,8 @@ cursor = mydb.cursor()
 # Hàm tạo dữ liệu ngẫu nhiên
 def generate_random_data():
   vendor_id = random.randint(1, 5)  # Giả sử có 5 VendorID
-  pickup_datetime = datetime.now() - timedelta(days=random.randint(0, 365))
-  dropoff_datetime = pickup_datetime + timedelta(minutes=random.randint(1, 60))
+  pickup_datetime = (datetime.now() - timedelta(days=random.randint(0, 365))).replace(microsecond=0)
+  dropoff_datetime = (pickup_datetime + timedelta(minutes=random.randint(1, 60))).replace(microsecond=0)
   passenger_count = random.randint(1, 4)
   trip_distance = round(random.uniform(0.5, 10.0), 2)
   rate_code_id = random.randint(1, 6)  # Giả sử có 6 RatecodeID

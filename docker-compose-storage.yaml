@@ -2,16 +2,16 @@ version: "3.9"
 services:
   # Distributed query engine for various types
   # of data sources
-  # trino:
-  #   ports:
-  #     - "8082:8082"
-  #   container_name: trino
-  #   image: "trinodb/trino:410"
-  #   volumes:
-  #     - ./trino/etc:/usr/lib/trino/etc:ro
-  #     - ./trino/catalog:/etc/trino/catalog
-  #   depends_on:
-  #     - hive-metastore
+  trino:
+    ports:
+      - "8082:8080"
+    container_name: trino
+    image: "trinodb/trino:410"
+    volumes:
+      - ./trino/etc:/usr/lib/trino/etc:ro
+      - ./trino/catalog:/etc/trino/catalog
+    depends_on:
+      - hive-metastore
 
   # We use PostgreSQL to store Hive metadata about
   # how the datafile are mapped to schemas and tables

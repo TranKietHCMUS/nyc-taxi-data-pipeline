@@ -1,4 +1,4 @@
-CREATE TABLE taxi_trip_records (
+CREATE TABLE IF NOT EXISTS taxi_trip_records (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vendor_id INT,
     tpep_pickup_datetime DATETIME,

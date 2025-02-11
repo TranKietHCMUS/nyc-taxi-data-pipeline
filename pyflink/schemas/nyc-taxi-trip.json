@@ -1,0 +1,50 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "type": "int32",
+      "optional": false,
+      "field": "id"
+    },
+    {
+      "type": "int32",
+      "optional": true,
+      "field": "vendor_id"
+    },
+    {
+      "type": "int32",
+      "optional": true,
+      "field": "passenger_count"
+    },
+    {
+      "type": "double",
+      "optional": true,
+      "field": "trip_distance"
+    },
+    {
+      "type": "int32",
+      "optional": true,
+      "field": "pu_location_id"
+    },
+    {
+      "type": "int32",
+      "optional": true,
+      "field": "do_location_id"
+    },
+    {
+      "type": "int32",
+      "optional": true,
+      "field": "payment_type"
+    },
+    {
+      "type": "double",
+      "optional": true,
+      "field": "total_amount"
+    },
+    {
+      "type": "int64",
+      "optional": true,
+      "field": "taken_time"
+    }
+  ]
+}

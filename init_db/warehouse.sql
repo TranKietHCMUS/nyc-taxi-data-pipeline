@@ -1,4 +1,4 @@
-CREATE TABLE taxi_trip_records (
+CREATE TABLE IF NOT EXISTS taxi_trip_records (
     id BIGSERIAL PRIMARY KEY, -- ID
     vendor_id INT, -- ID của nhà cung cấp
     tpep_pickup_datetime VARCHAR(50) NOT NULL, -- Ngày giờ đón khách
@@ -21,3 +21,5 @@ CREATE TABLE taxi_trip_records (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE SCHEMA IF NOT EXISTS visualize;

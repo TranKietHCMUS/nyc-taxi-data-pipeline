@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: raw
     database: nyc-taxi
-    schema: public  # Thay thế bằng schema phù hợp
+    schema: public
     tables:
       - name: taxi_trip_records
 
