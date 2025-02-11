@@ -12,6 +12,8 @@ from pyflink.datastream import RuntimeExecutionMode
 
 JARS_PATH = f"{os.getcwd()}/jars"
 
+SCHEMA_PATH = f"{os.getcwd()}/schemas/nyc-taxi-trip.json"
+
 required_fields = [
     'id',
     'vendor_id', 
@@ -19,11 +21,9 @@ required_fields = [
     'tpep_dropoff_datetime', 
     'passenger_count', 
     'trip_distance',
-    'rate_code_id', 
     'pu_location_id', 
     'do_location_id', 
     'payment_type', 
-    'fare_amount', 
     'total_amount'
 ]
 
@@ -35,7 +35,21 @@ def merge_features(record):
 
         # only get fields that are required
         payload = {k: v for k, v in payload.items() if k in required_fields}
-        return json.dumps(payload)
+
+        payload['taken_time'] = payload['tpep_dropoff_datetime'] - payload['tpep_pickup_datetime']
+
+        payload.pop('tpep_dropoff_datetime', None)
+        payload.pop('tpep_pickup_datetime', None)
+
+        with open(SCHEMA_PATH) as f:
+            schema = json.load(f)
+        
+        new_record = {
+            "schema": schema,
+            "payload": payload
+        }
+
+        return json.dumps(new_record)
     
     except json.JSONDecodeError as e:
         print(f"JSON Decode Error: {e}")
@@ -110,7 +124,7 @@ def main():
     ).map(merge_features, output_type=Types.STRING()).sink_to(sink=sink)
 
     # Execute the job
-    env.execute("flink_datastream_demo")
+    env.execute("flink_datastream")
     print("Your job has been started successfully!")
 
 

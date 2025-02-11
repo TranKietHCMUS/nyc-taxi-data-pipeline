@@ -16,6 +16,8 @@ ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
 COPY /jars/flink-connector-kafka-1.17.1.jar ./jars/flink-connector-kafka-1.17.1.jar
 COPY /jars/kafka-clients-3.4.0.jar ./jars/kafka-clients-3.4.0.jar
 
+COPY /schemas/nyc-taxi-trip.json ./schemas/nyc-taxi-trip.json
+
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
