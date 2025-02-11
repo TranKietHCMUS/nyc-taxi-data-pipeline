@@ -1,1 +1,0 @@
-docker run --network nyc-taxi-fare-prediction-pipeline_default -it kiettna/generator
